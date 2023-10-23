@@ -1,5 +1,4 @@
-package y2022
-package day01
+package adventofscala.y2022
 
 class Day01(input_path: String):
   var cal_per_elf: List[Int] = List()

@@ -1,6 +1,4 @@
-package y2022
-
-package day02
+package adventofscala.y2022
 
 class Day02(input_path: String):
   var instructions: List[Tuple] = List()
