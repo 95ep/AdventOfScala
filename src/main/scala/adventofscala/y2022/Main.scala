@@ -1,11 +1,14 @@
 package adventofscala.y2022
 
-import java.time.DayOfWeek
-
 @main def main(day: Int): Unit =
   day match
     case 1 => run_day01
     case 2 => run_day02
+    case 20 => {
+      val day = Day20("inputs")
+      day.part1
+      day.part2
+    }
     case _ => println(s"No solution for day ${day} implemented!")
 
 def run_day01: Unit =
