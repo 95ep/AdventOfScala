@@ -3,7 +3,7 @@ package adventofscala.y2022
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
-class TemplateSpec extends AnyFlatSpec with Matchers {
+class Day20Spec extends AnyFlatSpec with Matchers {
 
   val dayClass = Day20("test-inputs")
 

@@ -52,7 +52,7 @@ class Day20(inputFolder: String) extends Solution2022 with FileLoader {
   def part1: Long = {
     println("Running part 1")
     val inputList: List[Long] =
-      loadLines.toList.map(l => l.toLong)
+      loadLines(inputPath).toList.map(l => l.toLong)
     val decryptedList: List[Long] = mixNTimes(inputList, 1)
     val answer = getCoordsSum(decryptedList)
     println(s"Answer is $answer")
@@ -63,7 +63,7 @@ class Day20(inputFolder: String) extends Solution2022 with FileLoader {
     println("Running part 2")
     val decryptionKey: Long = 811589153L
     val inputList: List[Long] =
-      loadLines.toList.map(l => l.toLong * decryptionKey)
+      loadLines(inputPath).toList.map(l => l.toLong * decryptionKey)
     val decryptedList: List[Long] = mixNTimes(inputList, 10)
     val answer = getCoordsSum(decryptedList)
     println(s"Answer is $answer")
