@@ -1,4 +1,5 @@
 inputs/
+src/test/resources/solution-inputs/
 
 # macOS
 .DS_Store
