@@ -3,8 +3,8 @@ import adventofscala.utils.FileLoader
 
 class Day12 extends FileLoader {
 
-  def parseLine(line: String, repeats: Int): (String, List[Int], List[Int]) = {
-    val springs = ("?" + line.split(" ")(0)).repeat(repeats).drop(1)
+  def parseLine(line: String): (String, List[Int], List[Int]) = {
+    val springs = (line.split(" ")(0))
     val idxUnknown = springs.zipWithIndex
       .filter((spring, _) => spring == '?')
       .map((_, idx) => idx)
@@ -24,14 +24,12 @@ class Day12 extends FileLoader {
     groupSizes == groups
   }
 
-  def solution(inputList: List[String], repeats: Int): Int = {
+  def solution(inputList: List[String]): Int = {
     inputList
       .map(line => {
-        println(s"For line $line")
-        val parsedLine = parseLine(line, repeats)
+        val parsedLine = parseLine(line)
         val damagedToPlace = parsedLine._3.sum - parsedLine._1.count(_ == '#')
         val possibleArrangements = parsedLine._2.combinations(damagedToPlace)
-        println(s"${possibleArrangements.size} possible arrangements")
         val validArrangements = possibleArrangements.filter(arrangement =>
           isValid(arrangement, parsedLine._1, parsedLine._3)
         )
@@ -43,7 +41,7 @@ class Day12 extends FileLoader {
   def part1(inputPath: String): Int = {
     println("Running part 1")
     val inputList: List[String] = loadLines(inputPath).toList
-    val answer = solution(inputList, 1)
+    val answer = solution(inputList)
 
     println(s"${this.getClass()}: The answer to part one is $answer")
     answer
