@@ -93,16 +93,25 @@ class Day22 extends FileLoader {
       brickList: List[Brick],
       supportedBy: Map[Brick, Set[Brick]],
       supporting: Map[Brick, Set[Brick]]
-  ): Int = {
-    val bricksToRemove = brickList
+  ): List[Brick] = {
+    brickList
       .filter(brick => {
         supporting
           .getOrElse(brick, Set())
           .filter(supportedBy(_).size == 1)
           .isEmpty
-
       })
-    bricksToRemove.size
+  }
+
+  def nFalling(removedBricks: List[Brick], restingBricks: List[Brick]): Int = {
+    removedBricks
+      .map(brick => {
+        val newResting = restingBricks.filter(_ != brick)
+        val afterFalling = fallingBricks(newResting, Map())._1
+        val fallen = afterFalling.filter(b => !newResting.contains(b))
+        fallen.size
+      })
+      .sum
   }
 
   def part1(inputPath: String): Int = {
@@ -113,16 +122,25 @@ class Day22 extends FileLoader {
     val occupiedSpace = result._2
     val support = findSupport(restingBricks, occupiedSpace)
 
-    val answer = bricksToRemove(restingBricks, support._1, support._2)
+    val answer = bricksToRemove(restingBricks, support._1, support._2).size
     println(s"${this.getClass()}: The answer to part one is $answer")
     answer
   }
 
   def part2(inputPath: String): Int = {
     println("Running part 2")
-    // val inputList: List[String] = loadLines(inputPath).toList
+    val bricks: List[Brick] = loadLines(inputPath).toList.map(parseBrick)
+    val result = fallingBricks(bricks, Map())
+    val restingBricks = result._1
+    val occupiedSpace = result._2
+    val support = findSupport(restingBricks, occupiedSpace)
+    val noFallBricks =
+      bricksToRemove(restingBricks, support._1, support._2)
 
-    val answer = 1
+    val answer = nFalling(
+      restingBricks.filter(b => !noFallBricks.contains(b)),
+      restingBricks
+    )
     println(s"${this.getClass()}: The answer to part two is $answer")
     answer
   }
