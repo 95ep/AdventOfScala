@@ -8,8 +8,8 @@ class Day21 extends FileLoader {
   private def traceSteps(
       unvisited: Set[(Int, Int)],
       map: List[List[Char]],
-      distances: Map[(Int, Int), Int],
-      maxSteps: Int
+      distances: Map[(Int, Int), Int]
+      // maxSteps: Int
   ): Map[(Int, Int), Int] = {
     if (unvisited.isEmpty) distances
     else {
@@ -23,18 +23,16 @@ class Day21 extends FileLoader {
       ).filter(p =>
         -1 < p._1 && p._1 < map.size && -1 < p._2 && p._2 < map.head.size
       ).filter(p => map(p._1)(p._2) != '#')
-        .filter(p => currentDist < maxSteps)
-
+        .filter(p => !distances.keySet.contains(p))
       val newDistances =
         neighbours.foldLeft(distances)((d, p) => d.updated(p, currentDist + 1))
       val newUnvisited = unvisited ++ neighbours - current
-      traceSteps(newUnvisited, map, newDistances, maxSteps)
+      traceSteps(newUnvisited, map, newDistances)
     }
 
   }
 
-  def part1(inputPath: String, maxSteps: Int): Int = {
-    println("Running part 1")
+  def getDistances(inputPath: String, maxSteps: Int): Map[(Int, Int), Int] = {
     val inputList: List[List[Char]] =
       loadLines(inputPath).toList.map(_.toCharArray().toList)
 
@@ -46,24 +44,34 @@ class Day21 extends FileLoader {
         .map(p => (p._2, p._1))
         .head
 
-    val distances = {
-      for
-        i <- 0 until inputList.size
-        j <- 0 until inputList.head.size
-      yield (i, j) -> Int.MaxValue
-    }.toMap.updated(start, 0)
-    val allDistances = traceSteps(Set(start), inputList, distances, maxSteps)
-    val reached = allDistances.filter((_, d) => d < maxSteps + 1).toList
-    val answer = allDistances.count((_, d) => d == maxSteps)
+    traceSteps(Set(start), inputList, Map(start -> 0))
+  }
+
+  def part1(inputPath: String, maxSteps: Int): Int = {
+    println("Running part 1")
+    val allDistances = getDistances(inputPath, maxSteps)
+    val answer = allDistances.count((_, d) => d % 2 == 0 && d <= maxSteps)
+
     println(s"${this.getClass()}: The answer to part one is $answer")
     answer
   }
 
-  def part2(inputPath: String): Int = {
+  def part2(inputPath: String): Long = {
     println("Running part 2")
-    // val inputList: List[String] = loadLines(inputPath).toList
+    val allDistances = getDistances(inputPath, 64)
 
-    val answer = 1
+    val oddCorners =
+      allDistances.count((_, d) => d > 65 && d % 2 == 1)
+    val evenCorners =
+      allDistances.count((_, d) => d > 65 && d % 2 == 0)
+
+    val oddFull = allDistances.count((_, d) => d % 2 == 1)
+    val evenFull = allDistances.count((_, d) => d % 2 == 0)
+
+    val n: Long = 2023 * 100L
+
+    val answer =
+      (n + 1) * (n + 1) * oddFull + n * n * evenFull - (n + 1) * oddCorners + n * evenCorners
     println(s"${this.getClass()}: The answer to part two is $answer")
     answer
   }
