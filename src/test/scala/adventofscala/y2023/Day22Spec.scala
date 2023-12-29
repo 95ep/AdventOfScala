@@ -25,7 +25,7 @@ class Day22Spec extends AnyFlatSpec with Matchers {
     solution.part2(s"test-inputs/y$year/day$day.txt") should be(7)
   }
 
-  it should "solve for real input" in { // 40609 too low
+  it should "solve for real input" in {
     solution.part2(s"solution-inputs/y$year/day$day.txt")
   }
 }

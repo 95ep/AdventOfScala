@@ -8,8 +8,8 @@ class Day22 extends FileLoader {
     def coordDown: Coordinate = Coordinate(x, y, z - 1)
   }
 
-  case class Brick(start: Coordinate, end: Coordinate) {
-    def moveDown: Brick = Brick(start.coordDown, end.coordDown)
+  case class Brick(idx: Int, start: Coordinate, end: Coordinate) {
+    def moveDown: Brick = Brick(idx, start.coordDown, end.coordDown)
     def getCoords: List[Coordinate] =
       if (start.x != end.x)
         Range(start.x, end.x + 1).map(Coordinate(_, start.y, start.z)).toList
@@ -22,10 +22,11 @@ class Day22 extends FileLoader {
     def minZ = getCoords.map(_.z).min
   }
 
-  def parseBrick(line: String): Brick = {
+  def parseBrick(line: String, idx: Int): Brick = {
     val start = line.split("~")(0).split(",").map(_.toInt)
     val end = line.split("~")(1).split(",").map(_.toInt)
     Brick(
+      idx,
       Coordinate(start(0), start(1), start(2)),
       Coordinate(end(0), end(1), end(2))
     )
@@ -116,7 +117,8 @@ class Day22 extends FileLoader {
 
   def part1(inputPath: String): Int = {
     println("Running part 1")
-    val bricks: List[Brick] = loadLines(inputPath).toList.map(parseBrick)
+    val bricks: List[Brick] =
+      loadLines(inputPath).toList.zipWithIndex.map((l, i) => parseBrick(l, i))
     val result = fallingBricks(bricks, Map())
     val restingBricks = result._1
     val occupiedSpace = result._2
@@ -129,7 +131,8 @@ class Day22 extends FileLoader {
 
   def part2(inputPath: String): Int = {
     println("Running part 2")
-    val bricks: List[Brick] = loadLines(inputPath).toList.map(parseBrick)
+    val bricks: List[Brick] =
+      loadLines(inputPath).toList.zipWithIndex.map((l, i) => parseBrick(l, i))
     val result = fallingBricks(bricks, Map())
     val restingBricks = result._1
     val occupiedSpace = result._2
