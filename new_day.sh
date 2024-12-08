@@ -29,3 +29,12 @@ sed -i "" -e "s/DayXX/Day$DAY/g" $NEW_TEST_PATH
 sed -i "" -e "s/"20xx"/"$YEAR"/g" $NEW_TEST_PATH
 sed -i "" -e "s/"XX"/"$DAY"/g" $NEW_TEST_PATH
 echo "Created new spec file at $NEW_TEST_PATH"
+
+TEST_RESOURCE_DIR="$BASEDIR/src/test/resources"
+TEST_INPUT_PATH="$TEST_RESOURCE_DIR/test-inputs/y$YEAR/day$DAY.txt"
+touch $TEST_INPUT_PATH
+echo "Created test input file at $TEST_INPUT_PATH"
+
+SOLUTION_INPUT_PATH="$TEST_RESOURCE_DIR/solution-inputs/y$YEAR/day$DAY.txt"
+touch $SOLUTION_INPUT_PATH
+echo "Created solution input file at $SOLUTION_INPUT_PATH"
