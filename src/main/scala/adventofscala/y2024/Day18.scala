@@ -16,7 +16,7 @@ class Day18 extends FileLoader {
 
   @tailrec
   final def dijkstras(
-      unvisited: Seq[(Int, Int)],
+      unvisited: List[(Int, Int)],
       distances: Map[(Int, Int), Int],
       obstacles: Set[(Int, Int)],
       break: Boolean,
@@ -27,7 +27,8 @@ class Day18 extends FileLoader {
     if (goalDistance < Int.MaxValue) (goalDistance, prev)
     else if (break) (Int.MaxValue, prev)
     else {
-      val pos = unvisited.sortBy(c => distances(c)).head
+      val unvisitedSorted = unvisited.sortBy(c => distances(c))
+      val pos = unvisited.head
       val dist = distances(pos)
       val (x, y) = pos
       val neighbours =
@@ -42,7 +43,7 @@ class Day18 extends FileLoader {
         updatedNeighbours.foldLeft(distances)((d, n) => d.updated(n, dist + 1))
       val shouldBreak = dist == Int.MaxValue
       dijkstras(
-        unvisited.filter(_ != pos),
+        unvisitedSorted.tail,
         newDistances,
         obstacles,
         shouldBreak,
@@ -81,7 +82,7 @@ class Day18 extends FileLoader {
       allPositions.map(c => c -> Int.MaxValue).toMap.updated((0, 0), 0)
 
     val (dist, allPrev) =
-      dijkstras(allPositions, distances, obstacles, false, Map(), size)
+      dijkstras(allPositions.toList, distances, obstacles, false, Map(), size)
 
     if (dist == Int.MaxValue) timeFrame - 1
     else
@@ -114,7 +115,14 @@ class Day18 extends FileLoader {
       allPositions.map(c => c -> Int.MaxValue).toMap.updated((0, 0), 0)
 
     val answer =
-      dijkstras(allPositions, distances, obstacles, false, Map(), size)._1
+      dijkstras(
+        allPositions.toList,
+        distances,
+        obstacles,
+        false,
+        Map(),
+        size
+      )._1
     println(s"${this.getClass()}: The answer to part one is $answer")
     answer
   }
