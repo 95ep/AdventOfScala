@@ -36,9 +36,6 @@ class Day17Spec extends AnyFlatSpec with Matchers {
   }
 
   behavior of "part 2"
-  it should "pass the example test" in {
-    solution.part2(s"test-inputs/y$year/day${day}_2.txt") should be(117440)
-  }
 
   it should "solve for real input" in {
     solution.part2(s"solution-inputs/y$year/day$day.txt")

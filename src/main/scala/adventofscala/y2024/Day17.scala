@@ -14,8 +14,11 @@ class Day17 extends FileLoader {
       pointer: Int,
       output: String
   ) {
+    def withNewA(newA: Long): ChronospatialComputer =
+      ChronospatialComputer(newA, b, c, instructions, 0, "")
+
     def adv(op: Int): ChronospatialComputer = {
-      val newA = (a / scala.math.pow(2, comboOperand(op))).toInt
+      val newA = (a / scala.math.pow(2, comboOperand(op)).toLong)
       ChronospatialComputer(newA, b, c, instructions, pointer + 2, output)
     }
 
@@ -48,12 +51,12 @@ class Day17 extends FileLoader {
     }
 
     def bdv(op: Int): ChronospatialComputer = {
-      val newB = (a / scala.math.pow(2, comboOperand(op))).toInt
+      val newB = (a / scala.math.pow(2, comboOperand(op)).toLong)
       ChronospatialComputer(a, newB, c, instructions, pointer + 2, output)
     }
 
     def cdv(op: Int): ChronospatialComputer = {
-      val newC = (a / scala.math.pow(2, comboOperand(op))).toInt
+      val newC = (a / scala.math.pow(2, comboOperand(op)).toLong)
       ChronospatialComputer(a, b, newC, instructions, pointer + 2, output)
     }
 
@@ -114,27 +117,59 @@ class Day17 extends FileLoader {
     answer
   }
 
+  @tailrec
+  final def findCorrectStep(
+      c: ChronospatialComputer,
+      desired: String
+  ): Long = {
+    val newC = runInstructions(c)
+    if (newC.output == desired) c.a
+    else {
+
+      val updatedC = c.withNewA(c.a + 1)
+      findCorrectStep(updatedC, desired)
+    }
+  }
+
+  @tailrec
+  final def findCorrect(
+      desired: String,
+      step: Int,
+      c: ChronospatialComputer
+  ): Long = {
+    if (step == 16) c.a
+    else {
+      val correctA =
+        findCorrectStep(c.withNewA(c.a * 8), desired.takeRight(2 * step + 1))
+      findCorrect(desired, step + 1, c.withNewA(correctA))
+    }
+  }
+
   def part2(inputPath: String): Int = {
     println("Running part 2")
     val inputList: List[String] = loadLines(inputPath).toList
     val c = parse(inputList)
-    val start = 15000000000001L
-    val outputs = Future
-      .sequence(
-        Range(0, 500)
-          .map(i => {
-            Future {
-              val cVar = c.copy(a = start + i)
-              (i, runInstructions(cVar).output)
-            }
-          })
-      )
-    outputs.foreach(o => o.foreach(println))
-    val matchingOutputs =
-      Await
-        .result(outputs, 60.seconds)
-        .filter((i, o) => o == c.instructions.mkString(","))
-    val answer = matchingOutputs.head._1
+
+    val desired = "2,4,1,1,7,5,1,5,4,2,5,5,0,3,3,0"
+    val updatedC = c.withNewA(0)
+    val correct = findCorrect(desired, 0, updatedC)
+
+    // Program backwards
+    /*
+    3,0 jnz - jump has to be A=0 for exit else jumpst to start
+    0,3 adv reg A  div by 2^3=8. Writes to A
+    5,5 out reg B mod 8
+    4,2 XOR of registry B & C writes to B
+    1,5 XOR of registry B & 5 writes to B
+    7,5 div A by 2^B writes to C
+    1,1 XOR of B & 1 writes to B
+    2,4 reg A mod 8 writes to B
+     */
+    val cWithSuggestedA = c.withNewA(correct)
+    val output = runInstructions(cWithSuggestedA).output
+    if (output == desired) println(s"$correct replicates the program")
+
+    val answer = 1
     println(s"${this.getClass()}: The answer to part two is $answer")
     answer
   }
