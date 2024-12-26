@@ -42,28 +42,51 @@ class Day15 extends FileLoader {
     }
   }
 
-  // @tailrec
-  // final def moveBoxes(
-  //     walls: Set[(Int, Int)],
-  //     boxes: Set[(Int, Int)],
-  //     dir: (Int, Int),
-  //     pos: (Int, Int),
-  //     part2: Boolean
-  // ): Option[(Int, Int)] = {
-  //   val altBoxPos = if (pos._2 % 2 == 0) pos else (pos._1, pos._2 - 1)
-  //   if (walls(pos) || walls(altBoxPos)) None
-  //   else if (!boxes(altBoxPos) && !boxes(altBoxPos)) { Some(pos) }
-  //   else {
-  //     val newPos = (pos._1 + dir._1, pos._2 + dir._2)
-  //     moveBoxes(walls, boxes, dir, newPos, part2)
-  //   }
-  // }
+  def collideWithWall(
+      pos: (Int, Int),
+      walls: Set[(Int, Int)],
+      part2: Boolean
+  ): Boolean = {
+    val coordsOccupied = if (part2) Set(pos, (pos._1, pos._2 + 1)) else Set(pos)
+    val wallsOccupies =
+      if (part2) walls.map(w => List(w)).flatten else walls
+
+    (coordsOccupied & wallsOccupies).nonEmpty
+  }
+
+  def collidedBoxes( // Box to box collisions
+      pos: (Int, Int),
+      boxes: Set[(Int, Int)],
+      part2: Boolean
+  ): Set[(Int, Int)] = {
+    if (part2)
+      val coordsOccupied = Set(pos, (pos._1, pos._2 + 1))
+      boxes.filter((b1, b2) => {
+        val occupiedByBox = Set((b1, b2), (b1, b2 + 1))
+        (occupiedByBox & coordsOccupied).nonEmpty
+      })
+    else boxes.filter(b => b == pos)
+  }
+
+  def robotCollidedBoxes( // Robot to box collisions
+      pos: (Int, Int),
+      boxes: Set[(Int, Int)],
+      part2: Boolean
+  ): Set[(Int, Int)] = {
+    if (part2)
+      val coordsOccupied = Set(pos)
+      boxes.filter((b1, b2) => {
+        val occupiedByBox = Set((b1, b2), (b1, b2 + 1))
+        (occupiedByBox & coordsOccupied).nonEmpty
+      })
+    else boxes.filter(b => b == pos)
+  }
 
   @tailrec
   final def moveBoxes(
       toBeMoved: List[(Int, Int)],
-      movedBoxes: List[(Int, Int)],
-      removedBoxes: List[(Int, Int)],
+      movedBoxes: Set[(Int, Int)],
+      removedBoxes: Set[(Int, Int)],
       boxes: Set[(Int, Int)],
       walls: Set[(Int, Int)],
       dir: (Int, Int),
@@ -71,29 +94,18 @@ class Day15 extends FileLoader {
   ): Option[Set[(Int, Int)]] = {
     if (toBeMoved.isEmpty) Some(boxes -- removedBoxes ++ movedBoxes)
     else {
-      val orgPos =
-        if (part2)
-          List(
-            toBeMoved.head,
-            (toBeMoved.head._1, toBeMoved.head._2 + 1),
-            (toBeMoved.head._1, toBeMoved.head._2 - 1)
-          )
-        else
-          List(toBeMoved.head)
+      val currentPos = toBeMoved.head
+      val nextPos = (currentPos._1 + dir._1, currentPos._2 + dir._2)
 
-      val newPos: List[(Int, Int)] =
-        orgPos.map((i, j) => (i + dir._1, j + dir._2))
-      if (newPos.exists(p => walls.contains(p))) None
+      if (collideWithWall(nextPos, walls, part2)) None
       else {
         val newBoxesToMove =
-          newPos
-            .filter(p => boxes.contains(p))
-            .filter(p => !toBeMoved.contains(p)) ::: toBeMoved.tail
+          collidedBoxes(nextPos, boxes - currentPos, part2)
 
         moveBoxes(
-          newBoxesToMove,
-          movedBoxes :+ newPos.head,
-          removedBoxes :+ orgPos.filter(p => boxes.contains(p)).head,
+          toBeMoved.tail ++ newBoxesToMove,
+          movedBoxes + nextPos,
+          removedBoxes + currentPos,
           boxes,
           walls,
           dir,
@@ -101,6 +113,55 @@ class Day15 extends FileLoader {
         )
       }
     }
+  }
+
+  def addWalls(
+      walls: Set[(Int, Int)],
+      mapMatrix: Seq[Seq[String]]
+  ): Seq[Seq[String]] = {
+    if (walls.isEmpty) mapMatrix
+    else {
+      val wall = walls.head
+      val newMap =
+        mapMatrix.updated(wall._1, mapMatrix(wall._1).updated(wall._2, "#"))
+      addWalls(walls.tail, newMap)
+    }
+  }
+
+  def addBoxes(
+      boxes: Set[(Int, Int)],
+      mapMatrix: Seq[Seq[String]]
+  ): Seq[Seq[String]] = {
+    if (boxes.isEmpty) mapMatrix
+    else {
+      val wall = boxes.head
+      val newMapTmp =
+        mapMatrix.updated(wall._1, mapMatrix(wall._1).updated(wall._2, "["))
+      val newMap =
+        newMapTmp.updated(wall._1, newMapTmp(wall._1).updated(wall._2 + 1, "]"))
+      addBoxes(boxes.tail, newMap)
+    }
+  }
+
+  def print(
+      walls: Set[(Int, Int)],
+      boxes: Set[(Int, Int)],
+      robot: (Int, Int)
+  ) = {
+    val maxX = walls.map(_._1).max
+    val maxY = walls.map(_._2).max
+    val mapMatrix =
+      for i <- 0 until maxX + 1
+      yield (for j <- 0 until (maxY + 1) yield ".")
+
+    val withWalls = addWalls(walls, mapMatrix)
+    val withBoxes = addBoxes(boxes, withWalls)
+    val withRobot =
+      withBoxes.updated(robot._1, withBoxes(robot._1).updated(robot._2, "@"))
+
+    withRobot.foreach(l => println(l.mkString))
+    println()
+
   }
 
   @tailrec
@@ -111,6 +172,7 @@ class Day15 extends FileLoader {
       robot: (Int, Int),
       part2: Boolean
   ): Set[(Int, Int)] = {
+    // print(walls, boxes, robot)
     if (instructions.isEmpty) { boxes }
     else {
       val direction = instructions.head match
@@ -119,63 +181,23 @@ class Day15 extends FileLoader {
         case 'v' => (1, 0)
         case '^' => (-1, 0)
       val nextPos = (robot._1 + direction._1, robot._2 + direction._2)
-      val partFactor = if (part2) 2 else 1
-      val nextBoxPos =
-        (robot._1 + direction._1, robot._2 + direction._2 * partFactor)
+      val boxToMove = robotCollidedBoxes(nextPos, boxes, part2)
       val movedBoxes =
-        if (boxes(nextBoxPos))
-          moveBoxes(
-            List(nextBoxPos),
-            List(),
-            List(),
-            boxes,
-            walls,
-            direction,
-            part2
-          )
-        else if (
-          (boxes(
-            (nextBoxPos._1, nextBoxPos._2 - 1)
-          ) && part2)
+        moveBoxes(
+          boxToMove.toList,
+          Set(),
+          Set(),
+          boxes,
+          walls,
+          direction,
+          part2
         )
-          moveBoxes(
-            List((nextBoxPos._1, nextBoxPos._2 - 1)),
-            List(),
-            List(),
-            boxes,
-            walls,
-            direction,
-            part2
-          )
-        else None
-
-      // val movedBoxes =
-      //   (if (
-      //      boxes(nextBoxPos) || (boxes(
-      //        (nextBoxPos._1, nextBoxPos._2 - 1)
-      //      ) && part2)
-      //    )
-      //      moveBoxes(
-      //        List(nextBoxPos),
-      //        List(),
-      //        List(),
-      //        boxes,
-      //        walls,
-      //        direction,
-      //        part2
-      //      )
-      //    else None)
 
       val newPos =
-        if (
-          (!(walls(nextPos) || (walls(
-            (nextPos._1, nextPos._2 - 1)
-          ) && part2)) &&
-            !(boxes(nextPos) || (boxes(
-              (nextPos._1, nextPos._2 - 1)
-            ) && part2))) || movedBoxes.isDefined
-        ) nextPos
-        else robot
+        if (walls.contains(nextPos) || movedBoxes.isEmpty) robot
+        else nextPos
+
+      // println(instructions.head)
       runAround(
         instructions.tail,
         walls,

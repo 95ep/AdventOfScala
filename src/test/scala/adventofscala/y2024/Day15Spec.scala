@@ -31,7 +31,6 @@ class Day15Spec extends AnyFlatSpec with Matchers {
   }
 
   it should "solve for real input" in {
-    // 1488320 too high
     solution.part2(s"solution-inputs/y$year/day$day.txt")
   }
 }
